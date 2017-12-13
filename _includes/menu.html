@@ -1,3 +1,5 @@
+{% assign current = page.url | downcase | split: '/'  %}
+
 <nav class="navbar navbar-expand-md bg-secondary navbar-dark">
     <div class="container">
         <h1 class="navbar-brand d-md-none" href="{{ site.baseurl }}">{{ site.title }}</h1>
@@ -6,24 +8,26 @@
                 aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse text-center justify-content-center" id="navbar3SupportedContent">
             <ul class="navbar-nav">
-                <li class="nav-item"><a class="nav-link" href="{{ site.baseurl }}/">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ site.baseurl }}/pages/services.html">Services</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ site.baseurl }}/pages/reviews.html">Reviews</a></li>
-
+                <li class="nav-item"><a class="nav-link{% if current[0] == nil %} active{% endif %}" href="{{ site.baseurl }}/">Home</a></li>
+                <li class="nav-item"><a class="nav-link{% if current[2] == 'services.html' %} active{% endif %}" href="{{ site.baseurl }}/pages/services.html">Services</a></li>
+                <li class="nav-item"><a class="nav-link{% if current[2] == 'reviews.html' %} active{% endif %}" href="{{ site.baseurl }}/pages/reviews.html">Reviews</a></li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle{% if current[2] == 'projects.html' or page.tag == 'project' %} active{% endif %}"
+                       href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Projects
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="{{ site.baseurl }}/pages/projects.html">All</a>
+                        <a class="dropdown-item{% if current[2] == 'projects.html' %} active{% endif %}" href="{{ site.baseurl }}/pages/projects.html">All</a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="{{ site.baseurl }}/pages/dart.html">1972 Dodge Dart</a>
-                        <a class="dropdown-item" href="{{ site.baseurl }}/pages/cuda.html">1968 Plymouth Barracuda</a>
-                        <a class="dropdown-item" href="{{ site.baseurl }}/pages/lemans.html">1967 Pontiac LeMans</a>
+                        <a class="dropdown-item{% if current[2] == 'dart.html' %} active{% endif %}" href="{{ site.baseurl }}/pages/dart.html">1972 Dodge Dart</a>
+                        <a class="dropdown-item{% if current[2] == 'cuda.html' %} active{% endif %}" href="{{ site.baseurl }}/pages/cuda.html">1968 Plymouth Barracuda</a>
+                        <a class="dropdown-item{% if current[2] == 'lemans.html' %} active{% endif %}" href="{{ site.baseurl }}/pages/lemans.html">1967 Pontiac LeMans</a>
                     </div>
                 </li>
 
-                <li class="nav-item"><a class="nav-link" href="{{ site.baseurl }}/pages/about.html">About Us</a></li>
+
+
+                <li class="nav-item{% if current[2] == 'about.html' %} active{% endif %}"><a class="nav-link" href="{{ site.baseurl }}/pages/about.html">About Us</a></li>
             </ul>
             <!-- Contact Button -->
             <a class="ml-3 btn navbar-btn btn-primary" href="{{ site.baseurl }}/pages/location.html">Contact Us</a>
