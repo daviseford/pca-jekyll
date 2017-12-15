@@ -7,7 +7,6 @@ $(document).ready(function () {
   request.onload = function () {
     if (request.status >= 200 && request.status < 400) {
       const data = JSON.parse(request.responseText).data.image_url;
-      // console.log(data)
       const str = '<img src="' + data + '"  title="GIF via Giphy" class="img-fluid d-block w-100 mb-3">';
       $("#giphyme").append(str)
     } else {
