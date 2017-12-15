@@ -1,18 +1,23 @@
 #!/bin/bash
 
+# This renames .JPG, .jpeg, etc to .jpg
+rename_pictures()
+{
+for file in `find ./public/images/ -name "*$1*" -type f`; do
+  mv "$file" "${file/$1/$2}"
+done
+}
+
+rename_pictures JPG jpg     # Renaming
+rename_pictures jpeg jpg    # Renaming
+
 # Compress images - uncomment to run
 find ./public/images/ -type f -iname '*.jpg'  -exec jpegoptim --strip-com --max=85 {} \;
-find ./public/images/ -type f -iname '*.JPG'  -exec jpegoptim --strip-com --max=85 {} \;
-find ./public/images/ -type f -iname '*.jpeg'  -exec jpegoptim --strip-com --max=85 {} \;
 find ./public/images/ -type f -iname '*.png'  -print0 | xargs -0 optipng -o7
 
 # Common tasks to consider automating
-# Rename all JPG, jpeg, etc to just jpg
-# Maybe minifying HTML
-# Other minifiers for CSS and JS
-
-
-
+# Minifying HTML
+# Minifiers for CSS and JS
 
 # Build with Jekyll
 bundle exec jekyll build

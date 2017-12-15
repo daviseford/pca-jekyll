@@ -2140,4 +2140,4 @@ body > *{background-size:cover;}
 .opaque-overlay > *:first-child:before{content:'';width:100%;height:100%;display:block;position:absolute;left:0px;top:0px;pointer-events:none;background:rgba(52, 58, 64, 0.25);}
 .gradient-overlay{overflow:hidden;position:relative;}
 .gradient-overlay > *:first-child:before{content:'';width:100%;height:100%;display:block;position:absolute;left:0px;top:0px;pointer-events:none;background:linear-gradient(to top, #343a40 0%, transparent 100%);}
-.pca_splash_banner{background-image:url('http://parkcenterautomotive.com.s3-website-us-east-1.amazonaws.com/public/images/misc/lemans_banner1.JPG');background-repeat:no-repeat;-webkit-background-size:cover;-moz-background-size:cover;-o-background-size:cover;background-size:cover;background-position:center;}
+.pca_splash_banner{background-image:url('http://parkcenterautomotive.com.s3-website-us-east-1.amazonaws.com/public/images/misc/lemans_banner1.jpg');background-repeat:no-repeat;-webkit-background-size:cover;-moz-background-size:cover;-o-background-size:cover;background-size:cover;background-position:center;}
