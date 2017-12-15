@@ -24,3 +24,5 @@ bundle exec jekyll build
 
 # Upload to S3
 aws s3 sync --delete --size-only ./_site/ s3://parkcenterautomotive.com/
+
+echo "Done!"

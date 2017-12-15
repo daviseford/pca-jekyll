@@ -17,7 +17,7 @@ title: Park Center Automotive
 description: A small, family owned automotive repair shop located in Northern Virginia. Oil changes, transmission repair, and diagnostic work available.
 baseurl: "" # the subpath of your site, e.g. /blog
 img: "/public/images" # the folder containing images
-pages: "/public/pages" # the folder containing pages
+pg: "/pages" # the folder containing pages
 url: "http://parkcenterautomotive.com" # the base hostname & protocol for your site, e.g. http://example.com
 version: "1.0"
 
