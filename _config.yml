@@ -21,6 +21,10 @@ pg: "/pages" # the folder containing pages
 url: "http://parkcenterautomotive.com" # the base hostname & protocol for your site, e.g. http://example.com
 version: "1.0"
 
+# Business Info
+address: 8453 Park Center Court, Manassas Park, Virginia, 20111
+phone: (703) 335 1058
+
 # Build settings
 markdown: kramdown
 theme: minima
