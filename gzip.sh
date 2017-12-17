@@ -22,4 +22,4 @@ gzip -9fr ${GZIP_DIR}
 
 # And then upload to S3 with --content-encoding gzip
 # http://www.cheeming.com/2015/03/29/advanced-tricks-hosting-website-on-amazon-s3-enable-gzip-compression.html
-#aws s3 sync --content-encoding gzip --size-only ${GZIP_DIR} s3://parkcenterautomotive.com/
+aws s3 sync --content-encoding gzip --size-only ${GZIP_DIR} s3://parkcenterautomotive.com/
