@@ -3,3 +3,5 @@ _gzip
 .sass-cache
 .jekyll-metadata
 .idea/
+*.min.css
+*.min.js
