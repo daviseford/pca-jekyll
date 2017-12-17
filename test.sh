@@ -1,23 +1,12 @@
 #!/usr/bin/env bash
-
-minify_html()
+CSS_DIR='./public/css/'
+minify_css()
 {
-# Using html-minifier
-# npm install html-minifier-cli -g
-
-TMP_EXT='.min'
-
-# Make a minified copy of each .html file
-for file in `find ./_site/ -name "*.html" -type f`; do
-    htmlmin -o "${file}${TMP_EXT}" ${file}
+find ${CSS_DIR} -name "*.min.css" -type f|xargs rm -f   # Delete existing minified files
+# Using Uglify - npm install uglifycss -g
+for file in `find ${CSS_DIR} -name "*.css" -type f`; do
+    uglifycss --ugly-comments ${file} > "${file/.css/.min.css}" # Create new minified CSS file
 done
-
-# Now overwrite the older HTML with the new, minified version
-for file in `find ./_site/ -name "*${TMP_EXT}" -type f`; do
-    FILE_EXT="html${TMP_EXT}"
-    mv ${file} "${file/$FILE_EXT/html}"
-done
-
 }
 
-minify_html
+minify_css
