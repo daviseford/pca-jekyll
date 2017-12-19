@@ -2,6 +2,7 @@
 
 # THIS FILE IS UNUSED
 # JUST HERE AS A CURIOSITY
+# DOESN'T SEEM TO WORK LOL
 
 # This file creates gzipped copies of everything that Jekyll generates
 # And uploads it to S3 with the proper encoding
