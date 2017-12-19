@@ -21,9 +21,13 @@ MINIFY_JS=true              # Minify any JS files in your JS_DIR
 MINIFY_HTML=true            # Minify the Jekyll-generated HTML in your SITE_DIR
 COMPRESS_IMG=true           # If true, will compress all png and jpg files in your IMG_DIR
 RENAME_IMG=true             # If true, will rename files in IMG_DIR from ".JPG" and ".jpeg" to ".jpg"
+
 THUMBNAILS=false            # If true, will create a /thumbnails/ directory in your IMG_DIR
                             # with all of your current IMG_DIR structure copied over
 
+FAVICONS=true               # If true, will generate favicon files for you
+                            # Looks at /favicon.png and favicon_cfg.json
+                            # Uses https://realfavicongenerator.net/ CLI tool
 
 rename_pictures() # This renames files in our IMG_DIR
 {
@@ -84,6 +88,19 @@ if [ "$MINIFY_JS" = true ] && [ -d "$JS_DIR" ]; then
 fi
 }
 
+create_favicons()
+{
+if [ "$FAVICONS" = true ]; then
+    if [ -f "favicon.png" ] && [ -f "favicon_cfg.json" ]; then # Make sure we have all our files
+        # Using real-favicon | npm install cli-real-favicon -g
+        real-favicon generate favicon_cfg.json f_report.json ${SITE_DIR}
+        rm -f f_report.json
+    else
+        echo "Missing either favicon.png or favicon_cfg.json in the root directory of this site, can't generate thumbnails"
+        fi
+fi
+}
+
 create_thumbnails()
 {
 if [ "$THUMBNAILS" = true ] && [ -d "$IMG_DIR" ] ; then
@@ -109,6 +126,7 @@ if [ "$1" = "-s" ] || [ "$2" = "-s" ] || [ "$3" = "-s" ]; then
     npm install google-closure-compiler-js -g
     npm install uglifycss -g
     npm install html-minifier-cli -g
+    npm install cli-real-favicon -g
     exit 0
 fi
 
@@ -127,9 +145,12 @@ bundle exec jekyll build
 # Minify HTML (this modifies the generated HTML) - do AFTER building
 minify_html
 
+# Create favicons
+create_favicons
+
 # Upload to S3 - unless -n (no-upload) is passed in
 if [ "$1" != "-n" ] && [ "$2" != "-n" ] && [ "$3" != "-n" ]; then
-    aws s3 sync --delete --size-only ${SITE_DIR} ${SITE_S3}
+    aws s3 sync --delete --size-only ${SITE_DIR} ${SITE_S3} --exclude "*.sh"
     echo "Uploaded to S3"
 fi
 
