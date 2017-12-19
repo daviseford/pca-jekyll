@@ -5,7 +5,7 @@
 
 # You can run this script with three options
 # -i  | enable Image processing. Creates thumbnails, compresses images, and takes a while
-# -n  | No-upload mode. Doesn't upload the build to S3.
+# -n  | enable No-upload mode. Doesn't upload the build to S3.
 # -s  | enable Setup mode. Downloads the necessary npm files for compression
 
 # Some constants to make this more portable
@@ -18,14 +18,14 @@ SITE_DIR='./_site/'         # Constants
 # BUILD OPTIONS
 MINIFY_CSS=true             # Minify any CSS in your CSS_DIR
 MINIFY_JS=true              # Minify any JS files in your JS_DIR
-MINIFY_HTML=true            # Minify the Jekyll-generated HTML
-COMPRESS_IMG=true           # If true, will compress all png and jpg files in the IMG_DIR
+MINIFY_HTML=true            # Minify the Jekyll-generated HTML in your SITE_DIR
+COMPRESS_IMG=true           # If true, will compress all png and jpg files in your IMG_DIR
 RENAME_IMG=true             # If true, will rename files in IMG_DIR from ".JPG" and ".jpeg" to ".jpg"
 THUMBNAILS=false            # If true, will create a /thumbnails/ directory in your IMG_DIR
                             # with all of your current IMG_DIR structure copied over
 
 
-rename_pictures() # This renames .JPG, .jpeg, etc to .jpg
+rename_pictures() # This renames files in our IMG_DIR
 {
 for file in `find ${IMG_DIR} -name "*$1*" -type f`; do
     mv "$file" "${file/$1/$2}"
@@ -53,11 +53,8 @@ minify_html()
 if [ "$MINIFY_HTML" = true ]  && [ -d "$SITE_DIR" ]; then
     # Using html-minifier | npm install html-minifier-cli -g
     for file in `find ${SITE_DIR} -name "*.html" -type f`; do
-        htmlmin -o "${file}.min" "$file"    # Make a minified copy of each .html file
-    done
-
-    for file in `find ${SITE_DIR} -name "*.min" -type f`; do
-        mv "$file" "${file/html.min/html}"  # Overwrite the old HTML with the minified version
+        htmlmin -o "${file}.min" "$file"  # Make a minified copy of each .html file
+        mv "${file}.min" "$file"          # Overwrite the old HTML with the minified version
     done
     echo "Minified HTML"
 fi
@@ -78,10 +75,10 @@ fi
 minify_js()
 {
 if [ "$MINIFY_JS" = true ] && [ -d "$JS_DIR" ]; then
-    # Using UglifyES | npm install uglify-es -g
+    # Using google-closure-compiler-js | npm install google-closure-compiler-js -g
     find ${JS_DIR} -name "*.min.js" -type f|xargs rm -f   # Delete existing minified files
     for file in `find ${JS_DIR} -name "*.js" -type f`; do
-        uglifyjs "$file" --compress --mangle -o "${file/.js/.min.js}"
+        google-closure-compiler-js "$file" > "${file/.js/.min.js}"
     done
     echo "Minified JS"
 fi
@@ -109,7 +106,7 @@ fi
 
 # Run setup
 if [ "$1" = "-s" ] || [ "$2" = "-s" ] || [ "$3" = "-s" ]; then
-    npm install uglify-es -g
+    npm install google-closure-compiler-js -g
     npm install uglifycss -g
     npm install html-minifier-cli -g
     exit 0
