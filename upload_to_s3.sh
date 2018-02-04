@@ -13,7 +13,7 @@ SITE_S3='s3://parkcenterautomotive.com/'
 CSS_DIR='./public/css/'     # Constants
 JS_DIR='./public/js/'       # Constants
 IMG_DIR='./public/images/'  # Constants
-SITE_DIR='./_site/'         # Constants
+SITE_OUTPUT_DIR='./_site/'         # Constants
 
 # BUILD OPTIONS
 MINIFY_CSS=true             # Minify any CSS in your CSS_DIR
@@ -29,34 +29,95 @@ FAVICONS=true               # If true, will generate favicon files for you
                             # Looks at /favicon.png and favicon_cfg.json
                             # Uses https://realfavicongenerator.net/ CLI tool
 
-rename_pictures() # This renames files in our IMG_DIR
+
+# CLI OPTIONS - WILL BE SET AUTOMATICALLY. DO NOT TOUCH
+ARG_I=false
+ARG_C=false
+ARG_N=false
+ARG_S=false
+COMPRESSION_LEVEL="-o1"
+BUILD_LOG="build_log.txt"
+IMG_THUMB_DIR="${IMG_DIR}thumbnails/"
+TMP_THUMB_DIR='/tmp/thumbnails/'
+TMP_THUMB_DIR2='/tmp/thumbnails_tmp/'
+JPG_OPTS='-resize 445 -sampling-factor 4:2:0' # Will be used by mogrify
+PNG_OPTS='445'  # Will be used by imagemagick's convert
+# https://stackoverflow.com/questions/3953645/ternary-operator-in-bash
+PREVIOUS_BUILD_TIMESTAMP=$([ -f "$BUILD_LOG" ] && echo `stat -f"%Sm" -t "%F %T" "$BUILD_LOG"` || echo "1989-05-22 23:59:59")
+
+# Setting options
+while getopts :icns: opt; do
+  case $opt in
+    i)
+      ARG_I=true
+    ;;
+    c)
+      ARG_I=true # Implicit invocation
+      ARG_C=true
+      COMPRESSION_LEVEL="-o7"
+    ;;
+    n)
+      ARG_N=true
+    ;;
+    s)
+      ARG_S=true
+    ;;
+    \?)
+      echo "Bad parameter: -i, -c, -n, -s are accepted"
+      exit 1
+    ;;
+  esac
+done
+
+
+# BEGINNING OF BULK OF THE PROGRAM
+write_build_log()
 {
-for file in `find ${IMG_DIR} -name "*$1*" -type f`; do
-    mv "$file" "${file/$1/$2}"
+    current_timestamp=`date '+%Y-%m-%d %H:%M:%S'`
+    echo "Built $current_timestamp" > "$BUILD_LOG"
+    echo "Created $BUILD_LOG"
+}
+
+rename_extension() # This renames files in our IMG_DIR
+{
+for file in `find ${IMG_DIR} -name "*.$1" -type f`; do
+    mv "$file" "${file/.$1/.$2}"
 done
 }
 
 run_image_tasks()
 {
 if [ "$RENAME_IMG" = true ] && [ -d "$IMG_DIR" ] ; then
-    rename_pictures JPG jpg     # Renaming JPG -> jpg (makes the below optimization faster)
-    rename_pictures jpeg jpg    # jpeg -> jpg
-    rename_pictures PNG png     # PNG  -> png
+    rename_extension JPG jpg     # Renaming JPG -> jpg (makes the below optimization faster)
+    rename_extension jpeg jpg    # jpeg -> jpg
+    rename_extension PNG png     # PNG  -> png
 fi
+
 if [ "$COMPRESS_IMG" = true ] && [ -d "$IMG_DIR" ] ; then # Compress images
-    find ${IMG_DIR} -type f -iname '*.jpg'  -exec jpegoptim --strip-com --max=85 {} \;
-    find ${IMG_DIR} -type f -iname '*.png'  -print0 | xargs -0 optipng -o7
+    # Only compress if there are new files
+    N1=`find ${IMG_DIR} -not -path '*thumbnails/*' -type f -iname '*.jpg' -newerct "$PREVIOUS_BUILD_TIMESTAMP" | wc -l | xargs` # Number of files that meet this criteria
+    N2=`find ${IMG_DIR} -not -path '*thumbnails/*' -type f -iname '*.png' -newerct "$PREVIOUS_BUILD_TIMESTAMP" | wc -l | xargs`
+    if [ "$N1" -gt 0 ]; then
+        echo "Now compressing $N1 jpg files in ${IMG_DIR}"
+        find ${IMG_DIR} -not -path '*thumbnails/*' -type f -iname '*.jpg' -newerct "$PREVIOUS_BUILD_TIMESTAMP" -exec jpegoptim --strip-com --quiet --max=85 {} \;
+    fi
+    if [ "$N2" -gt 0 ]; then
+        echo "Now running ${COMPRESSION_LEVEL} level compression on $N2 .png files in ${IMG_DIR}"
+        find ${IMG_DIR} -not -path '*thumbnails/*' -type f -iname '*.png' -newermt "$PREVIOUS_BUILD_TIMESTAMP" -print0 | xargs -0 optipng ${COMPRESSION_LEVEL} -silent # Takes so long
+    fi
 fi
-if [[ "$COMPRESS_IMG" = true || "$RENAME_IMG" = true ]] && [ -d "$IMG_DIR" ]; then
-    echo "Ran image tasks"
+
+if [[ "$ARG_I" = true ]] && [ -d "$IMG_DIR" ]; then
+    echo "Finished image tasks"
 fi
 }
 
+
 minify_html()
 {
-if [ "$MINIFY_HTML" = true ]  && [ -d "$SITE_DIR" ]; then
+if [ "$MINIFY_HTML" = true ]  && [ -d "$SITE_OUTPUT_DIR" ]; then
     # Using html-minifier | npm install html-minifier-cli -g
-    for file in `find ${SITE_DIR} -name "*.html" -type f`; do
+    for file in `find ${SITE_OUTPUT_DIR} -name "*.html" -type f`; do
         htmlmin -o "${file}.min" "$file"  # Make a minified copy of each .html file
         mv "${file}.min" "$file"          # Overwrite the old HTML with the minified version
     done
@@ -93,36 +154,61 @@ create_favicons()
 if [ "$FAVICONS" = true ]; then
     if [ -f "favicon.png" ] && [ -f "favicon_cfg.json" ]; then # Make sure we have all our files
         # Using real-favicon | npm install cli-real-favicon -g
-        real-favicon generate favicon_cfg.json f_report.json ${SITE_DIR}
+        real-favicon generate favicon_cfg.json f_report.json ${SITE_OUTPUT_DIR}
         rm -f f_report.json
     else
         echo "Missing either favicon.png or favicon_cfg.json in the root directory of this site, can't generate thumbnails"
-        fi
+    fi
 fi
 }
 
 create_thumbnails()
 {
 if [ "$THUMBNAILS" = true ] && [ -d "$IMG_DIR" ] ; then
-    THUMBNAIL_DIR='/tmp/thumbnails/'
-    # Google-recommended defaults
-    # https://developers.google.com/speed/docs/insights/OptimizeImages
-    JPG_OPTS='-resize 445 -sampling-factor 4:2:0'
-    PNG_OPTS='-resize 445 -strip'
-    rm -rf ${THUMBNAIL_DIR} && mkdir ${THUMBNAIL_DIR} # Housekeeping
-    # Move images to /tmp/
-    rsync -a --exclude '*thumbnails/*' ${IMG_DIR} ${THUMBNAIL_DIR}
+    rm -rf ${TMP_THUMB_DIR} && mkdir ${TMP_THUMB_DIR}  # Housekeeping
+    rm -rf ${TMP_THUMB_DIR2} && mkdir ${TMP_THUMB_DIR2}  # Housekeeping
+    rsync -a --exclude '*thumbnails/*' --exclude '.DS_Store' ${IMG_DIR} ${TMP_THUMB_DIR}  # Move images to /tmp/
+    find ${TMP_THUMB_DIR} -name '*.DS_Store' -type f -delete # Delete pesky .DS_Store files
+    EXISTING_FILE_COUNT=`find ${TMP_THUMB_DIR} -type f | wc -l | xargs`
+
+    # A.) Check that the file has an associated thumbnail file in our IMG_THUMBDIR
+    # B.) If it does, just copy that file to our TMP_DIR2
+    # C.) If it doesn't, resize and compress
+    find ${TMP_THUMB_DIR} -type f -not -newermt "$PREVIOUS_BUILD_TIMESTAMP" | while read file; do
+        FILEPATH="${file/${TMP_THUMB_DIR}\//}"
+        DIRNAME=$( dirname "$FILEPATH" )
+        DEST="$TMP_THUMB_DIR2$FILEPATH"
+        MKDIR="$TMP_THUMB_DIR2$DIRNAME"
+        ORIG_THUMB_PATH="$IMG_THUMB_DIR$FILEPATH"
+        if [ -f "$ORIG_THUMB_PATH" ]; then # File exists already, just copy it to $DEST, and delete the file in our TMP_THUMB_DIR
+            mkdir -p "$MKDIR" && mv "$ORIG_THUMB_PATH" "$DEST" && rm -f "$file"
+        fi
+    done
+
+    NEW_FILE_COUNT=`find ${TMP_THUMB_DIR} -type f | wc -l | xargs`
+
     # Resize thumbs
-    find ${THUMBNAIL_DIR} -type f -iname '*.jpg' -exec mogrify $JPG_OPTS {} \;
-    # Move tmp thumbnails into the directory - only overwrite if size is different
-    rsync -r --size-only --delete ${THUMBNAIL_DIR} "${IMG_DIR}thumbnails/"
-    rm -rf ${THUMBNAIL_DIR} # Delete our temporary working directory
-    echo "Created thumbnails"
+    find ${TMP_THUMB_DIR} -type f -iname '*.jpg' -exec mogrify $JPG_OPTS {} \;
+    find ${TMP_THUMB_DIR} -type f -iname '*.png' -exec convert \{} -resize $PNG_OPTS\> \{} \;
+
+    # Further compress thumbnails
+    find ${TMP_THUMB_DIR} -type f -iname '*.jpg' -exec jpegoptim --strip-com --quiet --max=85 {} \;
+    find ${TMP_THUMB_DIR} -type f -iname '*.png' -print0 | xargs -0 optipng -o7 -silent # Takes so long
+
+    # Move the old thumbnails (already compressed) back into our dir
+    rsync -r --size-only ${TMP_THUMB_DIR2} ${TMP_THUMB_DIR}
+
+    # Move TMP_THUMB_DIR thumbnails into the IMG_THUMB_DIR directory - only overwrite if size is different
+    rsync -r --size-only --delete ${TMP_THUMB_DIR} ${IMG_THUMB_DIR}
+    rm -rf ${TMP_THUMB_DIR} && rm -rf ${TMP_THUMB_DIR2} # Delete our temporary working directories
+    echo "Generated $EXISTING_FILE_COUNT thumbnails ($NEW_FILE_COUNT new) in ${IMG_THUMB_DIR}"
 fi
 }
 
+### START OF EXECUTION ###
 # Run setup
-if [ "$1" = "-s" ] || [ "$2" = "-s" ] || [ "$3" = "-s" ]; then
+if [ "$ARG_S" = true ]; then
+    brew install imagemagick
     npm install google-closure-compiler-js -g
     npm install uglifycss -g
     npm install html-minifier-cli -g
@@ -130,9 +216,8 @@ if [ "$1" = "-s" ] || [ "$2" = "-s" ] || [ "$3" = "-s" ]; then
     exit 0
 fi
 
-
 # Run this script with the "-i" flag to process images (takes longer)
-if [ "$1" = "-i" ] || [ "$2" = "-i" ] || [ "$3" = "-i" ]; then
+if [ "$ARG_I" = true ]; then
     create_thumbnails && run_image_tasks
 fi
 
@@ -149,9 +234,14 @@ minify_html
 create_favicons
 
 # Upload to S3 - unless -n (no-upload) is passed in
-if [ "$1" != "-n" ] && [ "$2" != "-n" ] && [ "$3" != "-n" ]; then
-    aws s3 sync --delete --size-only ${SITE_DIR} ${SITE_S3} --exclude "*.sh"
+if [ "$ARG_N" = false ]; then
+    aws s3 sync --delete --size-only ${SITE_OUTPUT_DIR} ${SITE_S3} --exclude "*.sh" --exclude "*build_log.txt"
     echo "Uploaded to S3"
+fi
+
+# Write our build log
+if [ "$ARG_I" = true ] && [ "$ARG_C" = true ]; then
+    write_build_log
 fi
 
 echo "Done!"
