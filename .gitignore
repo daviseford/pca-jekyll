@@ -5,3 +5,4 @@ _gzip
 .idea/
 *.min.css
 *.min.js
+build_log.txt
