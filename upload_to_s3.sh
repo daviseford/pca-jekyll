@@ -219,6 +219,7 @@ fi
 if [ "$ARG_S" = true ]; then
     echo "Installing dependencies..."
     brew install imagemagick
+    brew upgrade imagemagick
     npm install babel-cli -g
     npm install babel-preset-env -g
     npm install google-closure-compiler-js -g
