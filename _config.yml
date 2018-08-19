@@ -14,7 +14,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 title: Park Center Automotive
-description: A small, family owned automotive repair shop located in Northern Virginia. Oil changes, transmission repair, and diagnostic work available.
+description: Your superior automotive experience. Oil changes, transmission repair, and diagnostic work available.
 baseurl: "" # the subpath of your site, e.g. /blog
 img: "/public/images" # the folder containing images
 pg: "/pages" # the folder containing pages
