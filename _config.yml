@@ -14,12 +14,12 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 title: Park Center Automotive
-description: Your superior automotive experience. Oil changes, transmission repair, and diagnostic work available.
+description: Your superior automotive experience. Classic car restoration, auto repair, and more.
 baseurl: "" # the subpath of your site, e.g. /blog
 img: "/public/images" # the folder containing images
 pg: "/pages" # the folder containing pages
 url: "https://parkcenterautomotive.com" # the base hostname & protocol for your site, e.g. http://example.com
-version: "3"
+version: "4"
 
 # Business Info
 address: 8453 Park Center Court, Manassas Park, Virginia, 20111
