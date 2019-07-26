@@ -22,7 +22,7 @@ JS_SRC_DIR="${SITE_SRC_DIR}js/"                 # Source JS
 IMG_SRC_DIR="${SITE_SRC_DIR}images/"            # Source images
 
 CF_DIST_ID='E3N38VVPZOP07M'                     # Cloudfront Distribution ID
-CF_PATH='/*'                                    # Cloudfront Path to invalidate
+CF_PATH='/pages/*'                              # Cloudfront Path to invalidate
 
 # BUILD OPTIONS - EDIT THESE
 IS_JEKYLL_SITE=true         # If true, will run jekyll build process
